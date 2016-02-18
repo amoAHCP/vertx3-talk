@@ -18,6 +18,13 @@
         <vertx-spring-ext.version>2.0.2</vertx-spring-ext.version>
         <vxms-verticle.version>1.0-SNAPSHOT</vxms-verticle.version>
     </properties>
+    <repositories>
+        <repository>
+            <id>sonatype-nexus-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+    </repositories>
+
 
     <dependencies>
         <!--Vertx provided dependencies-->
@@ -140,4 +147,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>

@@ -1,11 +1,13 @@
 package ch.trivadis.verticles;
 
+import ch.trivadis.configuration.CustomEndpointConfig;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import org.jacpfx.common.ServiceEndpoint;
 import org.jacpfx.common.exceptions.EndpointExecutionException;
+import org.jacpfx.vertx.rest.annotation.EndpointConfig;
 import org.jacpfx.vertx.rest.response.RestHandler;
 import org.jacpfx.vertx.services.VxmsEndpoint;
 
@@ -15,6 +17,7 @@ import javax.ws.rs.*;
  * Created by Andy Moncsek on 17.02.16.
  */
 @ServiceEndpoint(value = "", port = 9090)
+@EndpointConfig(CustomEndpointConfig.class)
 public class VxmsAggregator extends VxmsEndpoint {
 
 
