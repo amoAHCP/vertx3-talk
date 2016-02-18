@@ -20,11 +20,6 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-mongo-client</artifactId>
-            <version>3.2.1</version>
-        </dependency>
         <!--Vertx provided dependencies-->
         <dependency>
             <groupId>io.vertx</groupId>
