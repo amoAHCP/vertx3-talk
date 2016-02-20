@@ -12,6 +12,7 @@ import org.jacpfx.vertx.spring.SpringVerticle;
 
 import javax.inject.Inject;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -21,7 +22,6 @@ import java.util.function.Supplier;
 public class UsersReadFromMongoSpring extends AbstractVerticle {
     @Inject
     private UserRepository repo;
-
 
 
     @Override
@@ -34,25 +34,29 @@ public class UsersReadFromMongoSpring extends AbstractVerticle {
 
 
     private Handler<Message<Object>> getAllUsers() {
-        return handler -> executeBlocking(handler, () -> repo.getAllUsers());
+
+        return eventHandler -> executeBlocking(eventHandler, () -> convertToJsonArray(repo.getAllUsers()).encode());
     }
 
 
     private Handler<Message<Object>> getAllUserById() {
-        return handler -> {
-            final Object body = handler.body();
+        return eventHandler -> {
+            final Object body = eventHandler.body();
             final String id = body.toString();
-            executeBlocking(handler, () -> repo.findUserById(id));
+            executeBlocking(eventHandler, () -> {
+                final List<Users> userById = repo.findUserById(id);
+                return Json.encode(userById.size() > 0 ? userById.get(0) : new Users());
+            });
         };
     }
 
-
-    public void executeBlocking(Message<Object> handler, Supplier<Collection<Users>> usersSupplier) {
+    public void executeBlocking(Message<Object> handler, Supplier<String> usersSupplier) {
         vertx.executeBlocking(
-                blocking -> blocking.complete(convertToJsonArray(usersSupplier.get()).encode()),
+                blocking -> blocking.complete(usersSupplier.get()),
                 result -> handler.reply(result.result())
         );
     }
+
 
     private JsonArray convertToJsonArray(Collection<Users> allUsers) {
         JsonArray result = new JsonArray();
