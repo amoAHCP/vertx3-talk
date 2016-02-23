@@ -1,0 +1,30 @@
+mongodb:  
+  image: mongo
+  ports:
+    - "27017:27017"
+read:
+  build: read-service
+  hostname: read
+  links:
+  - mongodb:mongodb
+write:
+  image: write
+  hostname: write
+  links:
+  - mongodb:mongodb
+aggregator:
+  image: aggregator:latest
+  hostname: aggregator
+  links:
+  - read:read
+  - write:write
+  ports:
+   - "9090:9090"
+static-verticle:
+  image: static-verticle
+  hostname: static-verticle 
+  links:
+  - mongodb:mongodb
+  - aggregator:aggregator
+  ports:
+   - "8080:8080"

@@ -10,6 +10,8 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 
+import java.util.Optional;
+
 /**
  * Created by Andy Moncsek on 17.02.16.
  */
@@ -29,6 +31,8 @@ public class Aggregator extends AbstractVerticle {
         router.route().handler(BodyHandler.create());
 
         // define some REST API
+        router.get("/").handler(handler -> handler.response().end());
+
         router.get("/api/users").handler(this::getUsers);
 
         router.get("/api/users/:id").handler(this::getUserById);
@@ -39,8 +43,11 @@ public class Aggregator extends AbstractVerticle {
 
         router.delete("/api/users/:id").handler(this::deleteUser);
 
-        vertx.createHttpServer().requestHandler(router::accept).listen(9090);
+        final Integer port = Integer.valueOf(Optional.ofNullable(System.getenv("httpPort")).orElse("8080"));
+        final String host = Optional.ofNullable(System.getProperty("http.address")).orElse("0.0.0.0");
 
+        vertx.createHttpServer().requestHandler(router::accept).listen(port,host);
+        System.out.println("started on: "+host+":"+port);
         startFuture.complete();
     }
 
@@ -91,6 +98,7 @@ public class Aggregator extends AbstractVerticle {
     }
 
     private void getUsers(RoutingContext ctx) {
+        System.out.println("get users ");
         vertx.eventBus().send("/api/users", "", (Handler<AsyncResult<Message<String>>>) responseHandler -> {
             defaultResponse(ctx, responseHandler);
 

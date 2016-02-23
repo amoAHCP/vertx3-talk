@@ -130,7 +130,7 @@
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Class>io.vertx.core.Launcher</Main-Class>
-                                        <Main-Verticle>java-spring:ch.trivadis.service.SimpleSpringREST</Main-Verticle>
+                                        <Main-Verticle>ch.trivadis.verticles.VxmsAggregator</Main-Verticle>
                                     </manifestEntries>
                                 </transformer>
                                 <transformer

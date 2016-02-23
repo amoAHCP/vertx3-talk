@@ -13,6 +13,7 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 import javax.inject.Inject;
+import java.util.Optional;
 
 @Configuration
 @Profile("default")
@@ -23,7 +24,9 @@ public class MongoDataSourceConfiguration {
 
     @Bean(name="local")
     public MongoDbFactory mongoDbFactoryLocal() throws Exception {
-        MongoClient mongo = new MongoClient("localhost", 27017);
+        String address = Optional.ofNullable(System.getenv("MONGODB_PORT_27017_TCP_ADDR")).orElse("localhost");
+        String dbname = address.equals("localhost")?"demo":"vxmsdemo";
+        MongoClient mongo = new MongoClient(address, 27017);
         return new SimpleMongoDbFactory(mongo, "demo");
     }
 }

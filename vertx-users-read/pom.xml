@@ -125,12 +125,8 @@
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Class>io.vertx.core.Launcher</Main-Class>
-                                        <Main-Verticle>java-spring:ch.trivadis.service.SimpleSpringREST</Main-Verticle>
+                                        <Main-Verticle>ch.trivadis.verticles.UsersReadFromMongo</Main-Verticle>
                                     </manifestEntries>
-                                </transformer>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                    <resource>META-INF/services/io.vertx.core.spi.VerticleFactory</resource>
                                 </transformer>
                             </transformers>
                             <artifactSet/>

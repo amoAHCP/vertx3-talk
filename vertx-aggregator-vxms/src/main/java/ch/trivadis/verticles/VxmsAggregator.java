@@ -5,6 +5,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.metrics.MetricsOptions;
 import org.jacpfx.common.ServiceEndpoint;
 import org.jacpfx.common.exceptions.EndpointExecutionException;
 import org.jacpfx.vertx.rest.annotation.EndpointConfig;
@@ -15,6 +16,7 @@ import javax.ws.rs.*;
 
 /**
  * Created by Andy Moncsek on 17.02.16.
+ * -Dvertx.metrics.options.enabled=true -cluster
  */
 @ServiceEndpoint(value = "", port = 9090)
 @EndpointConfig(CustomEndpointConfig.class)
@@ -39,6 +41,8 @@ public class VxmsAggregator extends VxmsEndpoint {
             defaultResponse(handler, responseHandler);
 
         });
+
+
     }
 
     @Path("/api/users/:id")
@@ -95,7 +99,7 @@ public class VxmsAggregator extends VxmsEndpoint {
 
     // Convenience method so you can run it in your IDE
     public static void main(String[] args) {
-        VertxOptions vOpts = new VertxOptions();
+        VertxOptions vOpts = new  VertxOptions().setMetricsOptions(new MetricsOptions().setEnabled(true));
         DeploymentOptions options = new DeploymentOptions().setInstances(1).setConfig(new JsonObject().put("embedded", false));
         vOpts.setClustered(true);
         Vertx.clusteredVertx(vOpts, cluster -> {

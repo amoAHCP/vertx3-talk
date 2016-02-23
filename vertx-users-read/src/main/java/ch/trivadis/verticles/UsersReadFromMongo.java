@@ -5,6 +5,9 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
+import io.vertx.ext.web.Router;
+
+import java.util.Optional;
 
 /**
  * Created by Andy Moncsek on 17.02.16.
@@ -31,11 +34,28 @@ public class UsersReadFromMongo extends AbstractVerticle {
     @Override
     public void start(Future<Void> startFuture) throws Exception {
         // Create a mongo client using all defaults (connect to localhost and default port) using the database name "demo".
-        mongo = MongoClient.createShared(vertx, new JsonObject().put("db_name", "demo"));
-
+        String connectionUrl = connectionURL();
+        if (connectionUrl != null) {
+            String dbName = config().getString("dbname", "vxmsdemo");
+            mongo = MongoClient.createShared(vertx, new JsonObject().put("connection_string", connectionUrl).put("db_name", dbName));
+        } else {
+            mongo = MongoClient.createShared(vertx, new JsonObject().put("db_name", "demo"));
+        }
         vertx.eventBus().consumer("/api/users", getAllUsers());
 
         vertx.eventBus().consumer("/api/users/:id", getAllUserById());
+
+        Router router = Router.router(vertx);
+
+        // define some REST API
+        router.get("/").handler(handler -> handler.response().end());
+        final Integer port = Optional.ofNullable(Integer.getInteger("httpPort")).orElse(7070);
+        final String host = Optional.ofNullable(System.getProperty("http.address")).orElse("0.0.0.0");
+
+        vertx.createHttpServer().requestHandler(router::accept).listen(port,host);
+        System.out.println("started on: "+host+":"+port);
+        startFuture.complete();
+
     }
 
 
@@ -82,6 +102,16 @@ public class UsersReadFromMongo extends AbstractVerticle {
             });
         };
     }
+    private String connectionURL() {
+        if (System.getenv("OPENSHIFT_MONGODB_DB_URL") != null) {
+            return System.getenv("OPENSHIFT_MONGODB_DB_URL");
+        } else if (System.getenv("MONGODB_PORT_27017_TCP_ADDR") != null) {
+            String address = System.getenv("MONGODB_PORT_27017_TCP_ADDR");
+            String port = System.getenv("MONGODB_PORT_27017_TCP_PORT");
+            return "mongodb://" + address + ":" + port;
 
+        }
+        return null;
+    }
 
 }

@@ -11,27 +11,17 @@ import io.vertx.ext.mongo.MongoClient;
 public class UsersWriteToMongo extends AbstractVerticle {
     private MongoClient mongo;
 
-    // Convenience method so you can run it in your IDE
-    public static void main(String[] args) {
-
-        VertxOptions vOpts = new VertxOptions();
-        DeploymentOptions options = new DeploymentOptions().setInstances(1);
-        vOpts.setClustered(true);
-        Vertx.clusteredVertx(vOpts, cluster -> {
-            if (cluster.succeeded()) {
-                final Vertx result = cluster.result();
-                result.deployVerticle(UsersWriteToMongo.class.getName(), options, handle -> {
-
-                });
-            }
-        });
-    }
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
         // Create a mongo client using all defaults (connect to localhost and default port) using the database name "demo".
-        mongo = MongoClient.createShared(vertx, new JsonObject().put("db_name", "demo"));
-
+        String connectionUrl = connectionURL();
+        if (connectionUrl != null) {
+            String dbName = config().getString("dbname", "vxmsdemo");
+            mongo = MongoClient.createShared(vertx, new JsonObject().put("connection_string", connectionUrl).put("db_name", dbName));
+        } else {
+            mongo = MongoClient.createShared(vertx, new JsonObject().put("db_name", "demo"));
+        }
         vertx.eventBus().consumer("/api/users-post", insertUser());
 
         vertx.eventBus().consumer("/api/users/:id-put", updateUser());
@@ -138,5 +128,32 @@ public class UsersWriteToMongo extends AbstractVerticle {
         };
     }
 
+    private String connectionURL() {
+        if (System.getenv("OPENSHIFT_MONGODB_DB_URL") != null) {
+            return System.getenv("OPENSHIFT_MONGODB_DB_URL");
+        } else if (System.getenv("MONGODB_PORT_27017_TCP_ADDR") != null) {
+            String address = System.getenv("MONGODB_PORT_27017_TCP_ADDR");
+            String port = System.getenv("MONGODB_PORT_27017_TCP_PORT");
+            return "mongodb://" + address + ":" + port;
+
+        }
+        return null;
+    }
+
+    // Convenience method so you can run it in your IDE
+    public static void main(String[] args) {
+
+        VertxOptions vOpts = new VertxOptions();
+        DeploymentOptions options = new DeploymentOptions().setInstances(1);
+        vOpts.setClustered(true);
+        Vertx.clusteredVertx(vOpts, cluster -> {
+            if (cluster.succeeded()) {
+                final Vertx result = cluster.result();
+                result.deployVerticle(UsersWriteToMongo.class.getName(), options, handle -> {
+
+                });
+            }
+        });
+    }
 
 }
