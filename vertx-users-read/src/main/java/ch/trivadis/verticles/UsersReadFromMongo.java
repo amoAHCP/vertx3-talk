@@ -15,50 +15,20 @@ import java.util.Optional;
 public class UsersReadFromMongo extends AbstractVerticle {
     private MongoClient mongo;
 
-    // Convenience method so you can run it in your IDE
-    public static void main(String[] args) {
-
-        VertxOptions vOpts = new VertxOptions();
-        DeploymentOptions options = new DeploymentOptions().setInstances(1);
-        vOpts.setClustered(true);
-        Vertx.clusteredVertx(vOpts, cluster-> {
-            if(cluster.succeeded()){
-                final Vertx result = cluster.result();
-                result.deployVerticle(UsersReadFromMongo.class.getName(),options, handle -> {
-
-                });
-            }
-        });
-    }
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
-        // Create a mongo client using all defaults (connect to localhost and default port) using the database name "demo".
-        String connectionUrl = connectionURL();
-        if (connectionUrl != null) {
-            String dbName = config().getString("dbname", "vxmsdemo");
-            mongo = MongoClient.createShared(vertx, new JsonObject().put("connection_string", connectionUrl).put("db_name", dbName));
-        } else {
-            mongo = MongoClient.createShared(vertx, new JsonObject().put("db_name", "demo"));
-        }
+        initMongoDB();
+
         vertx.eventBus().consumer("/api/users", getAllUsers());
 
         vertx.eventBus().consumer("/api/users/:id", getAllUserById());
 
-        Router router = Router.router(vertx);
+        registerHealtCheckRoute();
 
-        // define some REST API
-        router.get("/").handler(handler -> handler.response().end());
-        final Integer port = Optional.ofNullable(Integer.getInteger("httpPort")).orElse(7070);
-        final String host = Optional.ofNullable(System.getProperty("http.address")).orElse("0.0.0.0");
-
-        vertx.createHttpServer().requestHandler(router::accept).listen(port,host);
-        System.out.println("started on: "+host+":"+port);
         startFuture.complete();
 
     }
-
-
 
 
 
@@ -93,7 +63,6 @@ public class UsersReadFromMongo extends AbstractVerticle {
                 }
 
                 JsonObject user = lookup.result();
-
                 if (user == null) {
                     handler.fail(404, "no user found");
                 } else {
@@ -102,6 +71,7 @@ public class UsersReadFromMongo extends AbstractVerticle {
             });
         };
     }
+
     private String connectionURL() {
         if (System.getenv("OPENSHIFT_MONGODB_DB_URL") != null) {
             return System.getenv("OPENSHIFT_MONGODB_DB_URL");
@@ -112,6 +82,47 @@ public class UsersReadFromMongo extends AbstractVerticle {
 
         }
         return null;
+    }
+
+    private void registerHealtCheckRoute() {
+        Router router = Router.router(vertx);
+
+        router.get("/").handler(handler -> handler.response().end());
+
+        final Integer port = Optional.ofNullable(Integer.getInteger("httpPort")).orElse(7070);
+        final String host = Optional.ofNullable(System.getProperty("http.address")).orElse("localhost");
+
+        vertx.createHttpServer().requestHandler(router::accept).listen(port, host);
+    }
+
+
+    private void initMongoDB() {
+        // Create a mongo client using all defaults (connect to localhost and default port) using the database name "demo".
+        String connectionUrl = connectionURL();
+        if (connectionUrl != null) {
+            String dbName = config().getString("dbname", "vxmsdemo");
+            System.out.println("mongo connection: " + connectionUrl + "  dbname:" + dbName);
+            mongo = MongoClient.createShared(vertx, new JsonObject().put("connection_string", connectionUrl).put("db_name", dbName));
+        } else {
+            mongo = MongoClient.createShared(vertx, new JsonObject().put("db_name", "demo"));
+        }
+    }
+
+
+    // Convenience method so you can run it in your IDE
+    public static void main(String[] args) {
+
+        VertxOptions vOpts = new VertxOptions();
+        DeploymentOptions options = new DeploymentOptions().setInstances(1);
+        vOpts.setClustered(true);
+        Vertx.clusteredVertx(vOpts, cluster -> {
+            if (cluster.succeeded()) {
+                final Vertx result = cluster.result();
+                result.deployVerticle(UsersReadFromMongo.class.getName(), options, handle -> {
+
+                });
+            }
+        });
     }
 
 }

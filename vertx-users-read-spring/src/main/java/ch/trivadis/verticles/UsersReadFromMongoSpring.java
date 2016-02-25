@@ -8,11 +8,13 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Router;
 import org.jacpfx.vertx.spring.SpringVerticle;
 
 import javax.inject.Inject;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -30,6 +32,11 @@ public class UsersReadFromMongoSpring extends AbstractVerticle {
         vertx.eventBus().consumer("/api/users", getAllUsers());
 
         vertx.eventBus().consumer("/api/users/:id", getAllUserById());
+
+        registerHealtCheckRoute();
+
+        startFuture.complete();
+
     }
 
 
@@ -66,6 +73,19 @@ public class UsersReadFromMongoSpring extends AbstractVerticle {
         }
         return result;
     }
+
+
+    private void registerHealtCheckRoute() {
+        Router router = Router.router(vertx);
+
+        router.get("/").handler(handler -> handler.response().end());
+
+        final Integer port = Optional.ofNullable(Integer.getInteger("httpPort")).orElse(7070);
+        final String host = Optional.ofNullable(System.getProperty("http.address")).orElse("localhost");
+
+        vertx.createHttpServer().requestHandler(router::accept).listen(port,host);
+    }
+
 
 
     // Convenience method so you can run it in your IDE

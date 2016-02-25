@@ -43,7 +43,7 @@ public class Aggregator extends AbstractVerticle {
 
         router.delete("/api/users/:id").handler(this::deleteUser);
 
-        final Integer port = Integer.valueOf(Optional.ofNullable(System.getenv("httpPort")).orElse("8080"));
+        final Integer port = Integer.valueOf(Optional.ofNullable(System.getenv("httpPort")).orElse("9090"));
         final String host = Optional.ofNullable(System.getProperty("http.address")).orElse("0.0.0.0");
 
         vertx.createHttpServer().requestHandler(router::accept).listen(port,host);
@@ -83,7 +83,6 @@ public class Aggregator extends AbstractVerticle {
 
     private void postUser(RoutingContext ctx) {
         JsonObject newUser = ctx.getBodyAsJson();
-
         vertx.eventBus().send("/api/users-post", newUser, (Handler<AsyncResult<Message<String>>>) responseHandler -> {
             defaultResponse(ctx, responseHandler);
 
@@ -98,7 +97,6 @@ public class Aggregator extends AbstractVerticle {
     }
 
     private void getUsers(RoutingContext ctx) {
-        System.out.println("get users ");
         vertx.eventBus().send("/api/users", "", (Handler<AsyncResult<Message<String>>>) responseHandler -> {
             defaultResponse(ctx, responseHandler);
 

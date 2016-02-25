@@ -26,7 +26,8 @@ public class MongoDataSourceConfiguration {
     public MongoDbFactory mongoDbFactoryLocal() throws Exception {
         String address = Optional.ofNullable(System.getenv("MONGODB_PORT_27017_TCP_ADDR")).orElse("localhost");
         String dbname = address.equals("localhost")?"demo":"vxmsdemo";
+        System.out.println("mongo connection: "+address+"  dbname:"+dbname);
         MongoClient mongo = new MongoClient(address, 27017);
-        return new SimpleMongoDbFactory(mongo, "demo");
+        return new SimpleMongoDbFactory(mongo, dbname);
     }
 }
